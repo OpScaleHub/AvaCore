@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">AvaCore</string>
+    <string name="tts_engine_name">AvaCore Persian TTS</string>
+</resources>

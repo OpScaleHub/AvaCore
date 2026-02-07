@@ -18,9 +18,12 @@ class TtsDataCheckActivity : Activity() {
         val action = intent?.action
         val resultIntent = Intent()
 
+        Log.d(TAG, "onCreate: action=$action")
+
         when (action) {
             TextToSpeech.Engine.ACTION_CHECK_TTS_DATA -> {
-                // Reporting ONLY the specific locale that matches the service
+                // فقط یک کد برمی‌گردانیم تا لیست تکراری نشود
+                // fa-IR استانداردترین حالت برای اندروید است
                 val availableVoices = arrayListOf("fa-IR")
                 resultIntent.putStringArrayListExtra(TextToSpeech.Engine.EXTRA_AVAILABLE_VOICES, availableVoices)
                 resultIntent.putStringArrayListExtra(TextToSpeech.Engine.EXTRA_UNAVAILABLE_VOICES, arrayListOf<String>())
@@ -29,11 +32,13 @@ class TtsDataCheckActivity : Activity() {
             "android.speech.tts.engine.GET_SAMPLE_TEXT" -> {
                 val sampleText = "این یک آزمایش از موتور بازگو کننده آوا است."
                 resultIntent.putExtra("sampleText", sampleText)
+                resultIntent.putExtra(TextToSpeech.Engine.EXTRA_SAMPLE_TEXT, sampleText)
                 setResult(RESULT_OK, resultIntent)
             }
             TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA -> {
                 setResult(RESULT_OK)
             }
+            else -> setResult(RESULT_CANCELED)
         }
 
         finish()

@@ -16,9 +16,10 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        maven { url = uri("https://jitpack.io") }
+        // REMOVED SHERPA-ONNX MAVEN REPO TO FORCE LOCAL AAR USAGE
     }
 }
 
 rootProject.name = "AvaCore"
 include(":app")
- 

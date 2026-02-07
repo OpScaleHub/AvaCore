@@ -14,6 +14,15 @@
         android:textStyle="bold" />
 
     <TextView
+        android:id="@+id/tvStatus"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="Checking status..."
+        android:textAlignment="center"
+        android:textStyle="italic" />
+
+    <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
@@ -22,9 +31,25 @@
 
     <Button
         android:id="@+id/btnOpenSettings"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="32dp"
-        android:text="Open TTS Settings" />
+        android:text="1. Open TTS Settings" />
+
+    <Button
+        android:id="@+id/btnBatteryOptimization"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="2. Fix Battery/Background Restrictions" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="Note: For Oplus/Oppo devices, ensure 'Allow background activity' and 'Allow autostart' are enabled."
+        android:textAlignment="center"
+        android:textSize="12sp"
+        android:alpha="0.7" />
 
 </LinearLayout>

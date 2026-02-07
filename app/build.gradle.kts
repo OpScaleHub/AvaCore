@@ -38,7 +38,8 @@ android {
     }
     packaging {
         jniLibs {
-            useLegacyPackaging = false
+            // Required for 16 KB page size compatibility with non-aligned native libs
+            useLegacyPackaging = true
         }
     }
 }
@@ -48,10 +49,12 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
     
-    // TensorFlow Lite for on-device inference
     implementation(libs.tensorflow.lite)
     implementation(libs.tensorflow.lite.support)
     implementation(libs.tensorflow.lite.gpu)
+
+    // Local Sherpa-ONNX Engine
+    implementation(files("libs/sherpa-onnx.aar"))
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

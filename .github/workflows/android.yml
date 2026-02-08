@@ -1,4 +1,4 @@
-name: Android CI & Release
+name: Android CI & Professional Release
 
 on:
   push:
@@ -37,23 +37,29 @@ jobs:
     - name: Build Debug APK
       run: ./gradlew assembleDebug
 
-    - name: Upload Build Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: avacore-debug-apk
-        path: app/build/outputs/apk/debug/app-debug.apk
+    - name: Rename APK for Release
+      run: mv app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/avacore-latest.apk
 
-    - name: Prepare GitHub Pages
+    - name: Create/Update GitHub Release
+      if: github.ref == 'refs/heads/main'
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: latest
+        name: "AvaCore Latest Build"
+        files: app/build/outputs/apk/debug/avacore-latest.apk
+        body: "خودکار ساخته شده توسط پایپ‌لاین گیت‌هاب اکشن. این نسخه شامل آخرین تغییرات و مدل‌های عصبی است."
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Prepare Landing Page
       if: github.ref == 'refs/heads/main'
       run: |
         mkdir -p public
-        # Copy the APK with a standardized name for the landing page link
-        cp app/build/outputs/apk/debug/app-debug.apk public/avacore-latest.apk
-        # Copy the landing page
+        # Copy only the landing page (NO LARGE APK HERE)
         if [ -f docs/index.html ]; then
           cp docs/index.html public/index.html
         else
-          echo "<html><body style='font-family:sans-serif;text-align:center;padding:50px;'><h1>AvaCore TTS Latest Build</h1><a href='avacore-latest.apk' style='padding:15px 25px;background:#7c3aed;color:white;text-decoration:none;border-radius:10px;'>Download latest APK</a></body></html>" > public/index.html
+          echo "<html><body style='font-family:sans-serif;text-align:center;padding:50px;'><h1>AvaCore TTS</h1><a href='https://github.com/OpScaleHub/AvaCore/releases/latest/download/avacore-latest.apk'>Download latest APK</a></body></html>" > public/index.html
         fi
 
     - name: Deploy to GitHub Pages

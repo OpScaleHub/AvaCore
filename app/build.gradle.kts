@@ -15,11 +15,18 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // بهینه‌سازی حجم: فقط معماری‌های پرکاربرد را نگه می‌داریم
+        ndk {
+            abiFilters.add("arm64-v8a")
+            abiFilters.add("armeabi-v7a")
+        }
     }
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -30,6 +37,7 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
+    @Suppress("UnstableApiUsage")
     kotlinOptions {
         jvmTarget = "17"
     }
@@ -38,8 +46,11 @@ android {
     }
     packaging {
         jniLibs {
-            // Required for 16 KB page size compatibility with non-aligned native libs
             useLegacyPackaging = true
+        }
+        resources {
+            excludes.add("/META-INF/AL2.0")
+            excludes.add("/META-INF/LGPL2.1")
         }
     }
 }
@@ -49,10 +60,6 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
     
-    implementation(libs.tensorflow.lite)
-    implementation(libs.tensorflow.lite.support)
-    implementation(libs.tensorflow.lite.gpu)
-
     // Local Sherpa-ONNX Engine
     implementation(files("libs/sherpa-onnx.aar"))
 

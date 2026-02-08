@@ -1,0 +1,70 @@
+name: Android CI & Professional Release
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v3
+      with:
+        gradle-version: wrapper
+
+    - name: Provision Assets (Offline Models)
+      run: |
+        chmod +x download_assets.sh
+        ./download_assets.sh
+
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
+
+    - name: Build Debug APK
+      run: ./gradlew assembleDebug
+
+    - name: Rename APK for Release
+      run: mv app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/avacore-latest.apk
+
+    - name: Create/Update GitHub Release
+      if: github.ref == 'refs/heads/main'
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: latest
+        name: "AvaCore Latest Build"
+        files: app/build/outputs/apk/debug/avacore-latest.apk
+        body: "خودکار ساخته شده توسط پایپ‌لاین گیت‌هاب اکشن. این نسخه شامل آخرین تغییرات و مدل‌های عصبی است."
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Prepare Landing Page
+      if: github.ref == 'refs/heads/main'
+      run: |
+        mkdir -p public
+        # Copy only the landing page (NO LARGE APK HERE)
+        if [ -f docs/index.html ]; then
+          cp docs/index.html public/index.html
+        else
+          echo "<html><body style='font-family:sans-serif;text-align:center;padding:50px;'><h1>AvaCore TTS</h1><a href='https://github.com/OpScaleHub/AvaCore/releases/latest/download/avacore-latest.apk'>Download latest APK</a></body></html>" > public/index.html
+        fi
+
+    - name: Deploy to GitHub Pages
+      if: github.ref == 'refs/heads/main'
+      uses: peaceiris/actions-gh-pages@v4
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./public

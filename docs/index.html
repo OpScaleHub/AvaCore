@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>آواکور | موتور هوشمند متن‌به‌گفتار فارسی</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
+    <style>
+        body { font-family: 'Vazirmatn', sans-serif; background-color: #0f172a; color: #f1f5f9; }
+        .hero-gradient { background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%); }
+        .accent-glow { text-shadow: 0 0 20px rgba(139, 92, 246, 0.5); }
+    </style>
+</head>
+<body class="hero-gradient min-h-screen">
+
+    <!-- Header -->
+    <nav class="container mx-auto px-6 py-8 flex justify-between items-center">
+        <div class="text-2xl font-bold text-violet-500 accent-glow">AvaCore</div>
+        <div class="flex gap-4">
+            <a href="https://github.com/OpScaleHub/AvaCore" class="bg-violet-600 hover:bg-violet-700 text-white px-6 py-2 rounded-full transition-all duration-300">مشاهده در گیت‌هاب</a>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="container mx-auto px-6 pt-16 pb-24 text-center">
+        <h1 class="text-5xl md:text-7xl font-extrabold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-violet-400 to-fuchsia-400">
+            آواکور: آوای هوشمند فارسی
+        </h1>
+        <p class="text-xl md:text-2xl text-slate-400 mb-10 max-w-3xl mx-auto leading-relaxed">
+            اولین موتور متن‌به‌گفتار (TTS) ۱۰۰٪ آفلاین و متن‌باز برای اندروید. صدایی طبیعی، بدون نیاز به اینترنت و با تمرکز بر حریم خصوصی.
+        </p>
+        <div class="flex flex-wrap justify-center gap-4">
+            <code class="bg-slate-800 text-violet-300 px-4 py-2 rounded-lg border border-slate-700 dir-ltr">./download_assets.sh</code>
+        </div>
+    </header>
+
+    <!-- Features -->
+    <section class="container mx-auto px-6 py-20">
+        <div class="grid md:grid-cols-3 gap-12">
+            <div class="bg-slate-800/50 p-8 rounded-2xl border border-slate-700 hover:border-violet-500 transition-all">
+                <div class="text-4xl mb-4">🔒</div>
+                <h3 class="text-xl font-bold mb-3">۱۰۰٪ آفلاین و امن</h3>
+                <p class="text-slate-400">تمام پردازش‌ها روی دستگاه شما انجام می‌شود. هیچ داده صوتی یا متنی به سرور ارسال نخواهد شد.</p>
+            </div>
+            <div class="bg-slate-800/50 p-8 rounded-2xl border border-slate-700 hover:border-violet-500 transition-all">
+                <div class="text-4xl mb-4">🚀</div>
+                <h3 class="text-xl font-bold mb-3">بهینه برای اندروید ۱۵</h3>
+                <p class="text-slate-400">سازگار با معماری‌های جدید (16KB Page Size) و عملکرد بی‌نقص روی گوشی‌های Oppo، OnePlus و Realme.</p>
+            </div>
+            <div class="bg-slate-800/50 p-8 rounded-2xl border border-slate-700 hover:border-violet-500 transition-all">
+                <div class="text-4xl mb-4">💎</div>
+                <h3 class="text-xl font-bold mb-3">کیفیت استودیویی</h3>
+                <p class="text-slate-400">بهره‌گیری از مدل‌های عصبی VITS (Piper) برای تولید صدایی شفاف، انسانی و بدون لحن رباتیک.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Technical Info -->
+    <section class="bg-slate-900/50 py-20 border-y border-slate-800">
+        <div class="container mx-auto px-6">
+            <h2 class="text-3xl font-bold mb-12 text-center">چرا آواکور برای توسعه‌دهندگان؟</h2>
+            <div class="max-w-4xl mx-auto space-y-6">
+                <div class="flex items-start gap-4">
+                    <span class="bg-violet-500/20 text-violet-400 p-2 rounded">✓</span>
+                    <div>
+                        <h4 class="font-bold">یکپارچگی استاندارد</h4>
+                        <p class="text-slate-400 text-sm">استفاده از کلاس استاندارد TextToSpeechService اندروید؛ به محض نصب، تمام اپلیکیشن‌های دیگر می‌توانند از آن استفاده کنند.</p>
+                    </div>
+                </div>
+                <div class="flex items-start gap-4">
+                    <span class="bg-violet-500/20 text-violet-400 p-2 rounded">✓</span>
+                    <div>
+                        <h4 class="font-bold">بیلد بدون دردسر</h4>
+                        <p class="text-slate-400 text-sm">حذف وابستگی به مخازن ناپایدار Maven و استفاده از سیستم Provisioning محلی برای بیلد ۱۰۰٪ آفلاین.</p>
+                    </div>
+                </div>
+                <div class="flex items-start gap-4">
+                    <span class="bg-violet-500/20 text-violet-400 p-2 rounded">✓</span>
+                    <div>
+                        <h4 class="font-bold">پشتیبانی از زبان فارسی</h4>
+                        <p class="text-slate-400 text-sm">بهینه‌شده برای کاراکترهای فارسی و هماهنگ با کتابخانه‌های واج‌شناسی eSpeak-NG.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="container mx-auto px-6 py-12 text-center text-slate-500 text-sm border-t border-slate-800">
+        <p>منتشر شده تحت لایسنس Apache 2.0 در تیم <a href="https://github.com/OpScaleHub" class="text-violet-400">OpScaleHub</a></p>
+        <p class="mt-2">ساخته شده با ❤️ برای جامعه‌ی فارسی‌زبان</p>
+    </footer>
+
+</body>
+</html>

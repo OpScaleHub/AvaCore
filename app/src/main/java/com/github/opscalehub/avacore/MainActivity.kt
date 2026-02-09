@@ -7,7 +7,6 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.PowerManager
 import android.provider.Settings
-import android.speech.tts.TextToSpeech
 import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -37,8 +36,6 @@ class MainActivity : AppCompatActivity() {
             intent.data = Uri.parse("package:$packageName")
             startActivity(intent)
         }
-        
-        updateStatus()
     }
 
     override fun onResume() {
@@ -50,33 +47,24 @@ class MainActivity : AppCompatActivity() {
         val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
         val isIgnoringBattery = pm.isIgnoringBatteryOptimizations(packageName)
         
-        // Use a nullable var so it can be referenced inside the listener
-        var ttsChecker: TextToSpeech? = null
-        ttsChecker = TextToSpeech(this) { status ->
-            if (status == TextToSpeech.SUCCESS) {
-                val currentEngine = ttsChecker?.defaultEngine
-                val isSelected = currentEngine == packageName
-                
-                runOnUiThread {
-                    val statusText = StringBuilder()
-                    if (isSelected) {
-                        statusText.append("✅ AvaCore is the active TTS engine.\n")
-                    } else {
-                        statusText.append("❌ AvaCore is NOT the active engine.\n")
-                    }
-                    
-                    if (isIgnoringBattery) {
-                        statusText.append("✅ Battery restrictions are disabled.")
-                    } else {
-                        statusText.append("⚠️ Battery optimization is active.")
-                    }
-                    
-                    tvStatus.text = statusText.toString()
-                    tvStatus.setTextColor(if (isSelected && isIgnoringBattery) Color.GREEN else Color.YELLOW)
-                }
-            }
-            // Shutdown immediately after checking
-            ttsChecker?.shutdown()
+        // Efficient check for default TTS engine without binding to the service
+        val defaultEngine = Settings.Secure.getString(contentResolver, Settings.Secure.TTS_DEFAULT_SYNTH)
+        val isSelected = defaultEngine == packageName
+        
+        val statusText = StringBuilder()
+        if (isSelected) {
+            statusText.append("✅ AvaCore is the active TTS engine.\n")
+        } else {
+            statusText.append("❌ AvaCore is NOT the active engine.\n")
         }
+        
+        if (isIgnoringBattery) {
+            statusText.append("✅ Battery restrictions are disabled.")
+        } else {
+            statusText.append("⚠️ Battery optimization is active.")
+        }
+        
+        tvStatus.text = statusText.toString()
+        tvStatus.setTextColor(if (isSelected && isIgnoringBattery) Color.GREEN else Color.YELLOW)
     }
 }

@@ -34,6 +34,7 @@ Text flows through `nlp/TextProcessor` before the neural model:
 - **Incremental streaming:** synthesis uses Sherpa's `generateWithCallback`, so the first audio plays after the first chunk — latency-to-first-audio stays roughly constant regardless of text length.
 - **Instant interruption:** `onStop()` aborts the current utterance mid-stream.
 - **System speech-rate:** the platform speech-rate is mapped to the engine speed multiplier.
+- **System pitch:** the platform pitch setting is honored via a duration-preserving SOLA pitch shifter (`dsp/PitchShifter`); the default pitch path streams untouched audio.
 - **OEM-safe buffering:** audio is delivered in ≤ 8 KB chunks to satisfy strict OEM audio paths (e.g. Oppo/OnePlus).
 - **Robust asset migration:** bundled assets are extracted to `filesDir` once, versioned (`ASSETS_VERSION`) and copied atomically so a stale or partial copy is repaired automatically.
 
@@ -50,10 +51,9 @@ These items are aspirational targets, not current behavior:
 - **Richer normalizer** — abbreviation/date/currency expansion, DadmaTools-style preprocessing.
 
 ### Model & inference
-- **INT8 quantization** of the ONNX model (~4× smaller, faster CPU inference).
+- **Smaller distribution** — dynamic INT8 quantization was evaluated and dropped (it crashes this Sherpa/ORT build at load and gives no APK-size win since zip already compresses the fp32 weights). The viable lever is per-ABI splits / an Android App Bundle.
 - **Hardware acceleration** — trial the NNAPI provider for NPU/GPU execution.
 - **SOTA model evaluation** — Matcha-TTS (flow-matching) and Kokoro are drop-in candidates via Sherpa's existing `OfflineTtsMatchaModelConfig` / `OfflineTtsKokoroModelConfig`.
-- **True pitch control** — a DSP/phase-vocoder stage (VITS exposes no native pitch parameter).
 - **SSML expansion** — prosody/emphasis/phoneme tags.
 
 ### Training methodology (reference)

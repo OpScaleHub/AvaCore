@@ -36,9 +36,13 @@ class TtsDataCheckActivity : Activity() {
                 val lang = intent.getStringExtra("language")
                 Log.d(TAG, "GET_SAMPLE_TEXT for language: $lang")
                 
-                val sampleText = "این یک آزمایش از موتور بازگو کننده آوا است."
+                val sampleText = "این یک آزمایش از موتور بازگوکننده آوا است."
                 resultIntent.putExtra(TextToSpeech.Engine.EXTRA_SAMPLE_TEXT, sampleText)
-                setResult(RESULT_OK, resultIntent)
+                // The TTS settings screen only accepts the sample when the result
+                // code is LANG_AVAILABLE; returning RESULT_OK makes it silently fall
+                // back to its built-in English string (spoken by the Persian voice
+                // as gibberish). This is the fix for that.
+                setResult(TextToSpeech.LANG_AVAILABLE, resultIntent)
             }
             TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA -> {
                 // Since it's offline and included, we just say okay

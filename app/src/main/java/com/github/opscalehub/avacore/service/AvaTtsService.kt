@@ -7,8 +7,10 @@ import android.speech.tts.TextToSpeech
 import android.speech.tts.TextToSpeechService
 import android.speech.tts.Voice
 import android.util.Log
+import com.github.opscalehub.avacore.dsp.PitchShifter
 import com.github.opscalehub.avacore.nlp.PronunciationLexicon
 import com.github.opscalehub.avacore.nlp.TextProcessor
+import kotlin.math.abs
 import com.k2fsa.sherpa.onnx.OfflineTts
 import com.k2fsa.sherpa.onnx.OfflineTtsConfig
 import com.k2fsa.sherpa.onnx.OfflineTtsModelConfig
@@ -247,8 +249,13 @@ class AvaTtsService : TextToSpeechService() {
 
         val speed = computeSpeed(request)
         val sampleRate = engine.sampleRate()
-        // request.pitch is read but intentionally not applied: VITS has no pitch
-        // control and naive resampling shifts formants and degrades quality.
+        // Honor the system pitch setting (100 = normal). Pitch shifting is applied
+        // as a post-process (SOLA) only when non-default; the default path streams
+        // untouched audio at full speed.
+        val pitchFactor = (request.pitch / 100f).coerceIn(0.5f, 2.0f)
+        val applyPitch = abs(pitchFactor - 1f) >= 0.01f
+        Log.d(TAG, "synthesize: rate=${request.speechRate} pitch=${request.pitch} " +
+            "len=${rawText.length} text='${rawText.take(60).replace('\n', ' ')}'")
 
         try {
             val units = processor.process(rawText)
@@ -265,9 +272,16 @@ class AvaTtsService : TextToSpeechService() {
             for (unit in units) {
                 if (isInterrupted.get() || isDestroyed.get()) break
                 if (unit.text.isNotBlank()) {
-                    engine.generateWithCallback(unit.text, 0, speed) { chunk ->
-                        writer.write(chunk)
-                        if (isInterrupted.get() || isDestroyed.get()) 0 else 1
+                    if (applyPitch) {
+                        // Pitch path: synthesize the (short) sentence, shift, then write.
+                        val audio = engine.generate(unit.text, 0, speed)
+                        if (isInterrupted.get() || isDestroyed.get()) break
+                        writer.write(PitchShifter.process(audio.samples, pitchFactor))
+                    } else {
+                        engine.generateWithCallback(unit.text, 0, speed) { chunk ->
+                            writer.write(chunk)
+                            if (isInterrupted.get() || isDestroyed.get()) 0 else 1
+                        }
                     }
                 }
                 if (isInterrupted.get() || isDestroyed.get()) break

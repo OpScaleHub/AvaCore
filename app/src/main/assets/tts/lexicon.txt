@@ -1,0 +1,36 @@
+# AvaCore pronunciation lexicon
+# ------------------------------------------------------------------------------
+# Format (UTF-8):   surface = replacement
+#   - One entry per line. Lines starting with '#' are comments.
+#   - "surface" is matched as a whole token/phrase (it will NOT match inside a
+#     larger word). Longer surfaces are tried before shorter ones.
+#   - "replacement" is what is actually fed to the G2P engine. Use explicit
+#     Persian short-vowel diacritics — eSpeak-NG honors them:
+#         zebar/fatha  ◌َ (U+064E)   e.g. مَرد
+#         zir/kasra    ◌ِ (U+0650)   e.g. کتابِ  (also used to force EZAFE)
+#         pish/damma   ◌ُ (U+064F)   e.g. گُل
+#
+# PHILOSOPHY: keep entries HIGH-PRECISION. Only add a surface form that has a
+# single correct pronunciation regardless of context (fixed expressions, lexical
+# ezafe compounds, ligatures). Do NOT add context-dependent homographs here
+# (e.g. مرد = mard/mord) — those need the future ML disambiguator, and a wrong
+# guess is worse than none.
+#
+# This file is intentionally small and curated. Grow it with verified entries.
+# ------------------------------------------------------------------------------
+
+# --- Ligatures / presentation forms ---
+﷼ = ریال
+ﷺ = صلی الله علیه و آله و سلم
+ﷲ = الله
+
+# --- Fixed-ezafe compounds (ezafe is lexical here, always pronounced) ---
+مورد نظر = موردِ نظر
+نقطه نظر = نقطهٔ نظر
+وزارت کشور = وزارتِ کشور
+وزارت بهداشت = وزارتِ بهداشت
+حقوق بشر = حقوقِ بشر
+
+# --- Common symbols read as words ---
+& = و
+@ = اَت

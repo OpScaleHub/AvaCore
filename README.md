@@ -1,51 +1,74 @@
 # AvaCore: Native Persian Text-to-Speech (TTS) Engine for Android
 
-AvaCore is a high-performance, on-device Persian (Farsi) Text-to-Speech engine designed to provide a natural and seamless voice experience for Android users. By integrating directly with the `android.speech.tts` framework, AvaCore enables all Android applications to speak Farsi with human-like prosody and high clarity, entirely offline.
+AvaCore is a high-performance, on-device Persian (Farsi) Text-to-Speech engine designed to provide a natural and seamless voice experience for Android users. By integrating directly with the `android.speech.tts` framework, AvaCore enables all Android applications to speak Farsi with human-like prosody and high clarity, **entirely offline** — no network access is required at build or run time.
 
 ## Project Vision
-To bridge the accessibility gap for Persian speakers on Android by delivering a state-of-the-art TTS engine that overcomes the unique linguistic challenges of the Farsi language, such as short vowel omissions and hidden *Ezafe* constructions.
-
-## Technical Roadmap
-
-### 1. NLP and Linguistic Analysis Pipeline
-The quality of synthesized speech depends heavily on text analysis. Farsi poses unique challenges with homographs and hidden vowels.
-*   **Preprocessing:** Utilizing `DadmaTools` for character normalization and noise removal.
-*   **Ezafe Detection:** Advanced detection of "Kasreh Ezafe" to ensure grammatical correctness in pronunciation.
-*   **Homograph Disambiguation:** Implementation of the `GE2PE` protocol to resolve phonetic ambiguities in written Farsi, significantly improving recognition accuracy.
-*   **Two-Step G2P Training:** A Grapheme-to-Phoneme model trained first on massive machine-generated data, followed by fine-tuning on high-precision manual transcriptions.
-
-### 2. Neural Synthesis Architecture
-A hybrid approach focusing on stability and performance for mobile environments.
-*   **Frontend (Tacotron):** Employs **Stepwise Monotonic Attention** to prevent word skipping or repeating in long sentences, ensuring robust synthesis for complex Farsi literature.
-*   **Backend/Vocoder (WaveRNN):** Generates high-quality 24kHz audio. WaveRNN reduces the storage footprint from standard large-scale models to a mobile-friendly 2.5MB - 70MB range.
-
-### 3. On-Device Optimization (Edge AI)
-Optimized for real-time performance on various mobile hardware tiers.
-*   **Quantization:** 8-bit mu-law quantization with a **0.86 Pre-emphasis filter** to maintain signal-to-noise ratio while reducing model size.
-*   **Hardware Acceleration:** Leveraging the **Android Neural Networks API (NNAPI)** for NPU/GPU execution.
-*   **Computation Efficiency:** Split-state GRU architecture and result caching for a 15-50% boost in computational efficiency, targeting at least **3x Real-Time Factor (RTF)**.
-
-### 4. Android System Integration
-Seamlessly integrated into the Android ecosystem to serve all installed applications.
-*   **System Engine:** Implemented via the standard `android.speech.tts.TextToSpeechService` API.
-*   **Streaming Logic:** Uses an **Inner/Outer stream loop** (5:1 ratio, approx. 100ms speech chunks) for ultra-low latency incremental audio delivery.
-*   **Standard Compliance:** Supports system intents like `ACTION_INSTALL_TTS_DATA` for seamless resource management and installation.
-
-### 5. Training Methodology & ManaTTS Dataset
-*   **Dataset:** Powered by the **ManaTTS** dataset, featuring 86 hours of high-quality 44.1kHz speech.
-*   **Cleaning:** Audio preprocessing using Spleeter to ensure noise-free training samples.
-*   **Forced Alignment:** Multi-model ASR voting and Interval/Gapped search for precise text-to-audio alignment.
-*   **Quality Control:** Strict Character Error Rate (CER) thresholds (HIGH < 0.05, MIDDLE < 0.20) for training data selection.
-
-## Performance Benchmarks (KPIs)
-
-| Metric | Target Value | Technical Note |
-| :--- | :--- | :--- |
-| **Real-Time Factor (RTF)** | > 3.0x | Speed on mid-range CPU/NPU |
-| **Perceived Latency (CPL)** | < 180ms | Time until first audio buffer playback |
-| **RAM Usage** | 10 - 20 MB | Active memory footprint during synthesis |
-| **Storage (Disk)** | < 80 MB | Total model weights (Tacotron + WaveRNN) |
-| **Mean Opinion Score (MOS)** | > 4.0 | Subjective naturalness vs. human speech |
+To bridge the accessibility gap for Persian speakers on Android by delivering a state-of-the-art TTS engine that overcomes the unique linguistic challenges of the Farsi language, such as short-vowel omission and hidden *Ezafe* (کسرهٔ اضافه) constructions.
 
 ---
-AvaCore aims to set a new standard for Persian accessibility on Android, providing a robust, offline, and high-quality voice for navigators, screen readers, and virtual assistants.
+
+## Current Architecture (what ships today)
+
+AvaCore is built on a compact, proven, fully-offline stack:
+
+| Layer | Technology | Notes |
+| :--- | :--- | :--- |
+| **Inference engine** | Sherpa-ONNX 1.10.41 (`app/libs/sherpa-onnx.aar`) | JNI + Kotlin wrapper around ONNX Runtime |
+| **Acoustic + vocoder** | **Piper VITS** (`persian_model.onnx`) | End-to-end model — the HiFi-GAN-style decoder *is* the vocoder; 22.05 kHz |
+| **Grapheme-to-phoneme** | **eSpeak-NG** (`espeak-ng-data/`) | Persian phonemization |
+| **Text front-end** | AvaCore `nlp/` pipeline (Kotlin) | Normalization, number expansion, lexicon, segmentation, SSML |
+| **System integration** | `AvaTtsService : TextToSpeechService` | Serves every app on the device |
+
+> Note: VITS is a single end-to-end network. There is **no separate Tacotron front-end or WaveRNN vocoder** in the shipping engine — those belong to the future roadmap below.
+
+### Synthesis pipeline
+Text flows through `nlp/TextProcessor` before the neural model:
+
+1. **SSML** (`nlp/Ssml.kt`) — `<speak>`, `<break>`, `<say-as>` are honored; plain text passes through.
+2. **Number expansion** (`nlp/NumberToWords.kt`) — full Persian cardinals/ordinals/decimals/percent (`۱۴۰۳` → «هزار و چهارصد و سه»), Persian/Arabic/ASCII digits.
+3. **Normalization** (`nlp/Normalizer.kt`) — Arabic→Persian letter folding, ZWNJ (نیم‌فاصله) normalization, kashida/tanvin/diacritic cleanup, punctuation spacing.
+4. **Pronunciation lexicon** (`nlp/PronunciationLexicon.kt` + `assets/tts/lexicon.txt`) — high-precision overrides for short-vowel restoration and fixed *ezafe* compounds; curated and easily extensible.
+5. **Sentence segmentation** (`nlp/SentenceSegmenter.kt`) — splits text into short, prosodically-paused units.
+
+### Streaming + responsiveness
+- **Incremental streaming:** synthesis uses Sherpa's `generateWithCallback`, so the first audio plays after the first chunk — latency-to-first-audio stays roughly constant regardless of text length.
+- **Instant interruption:** `onStop()` aborts the current utterance mid-stream.
+- **System speech-rate:** the platform speech-rate is mapped to the engine speed multiplier.
+- **OEM-safe buffering:** audio is delivered in ≤ 8 KB chunks to satisfy strict OEM audio paths (e.g. Oppo/OnePlus).
+- **Robust asset migration:** bundled assets are extracted to `filesDir` once, versioned (`ASSETS_VERSION`) and copied atomically so a stale or partial copy is repaired automatically.
+
+See `ARCHITECTURE.md` for deployment details (16 KB page-size packaging, background-execution permissions on some OEMs).
+
+---
+
+## Future Roadmap (not yet implemented)
+
+These items are aspirational targets, not current behavior:
+
+### Linguistic depth
+- **Ezafe prediction & homograph disambiguation** — an ML model (GE2PE-style two-step G2P: large machine-generated pre-training + manual fine-tuning) to resolve مرد/مُرد-type ambiguities and predict ezafe in context, replacing the curated lexicon seed.
+- **Richer normalizer** — abbreviation/date/currency expansion, DadmaTools-style preprocessing.
+
+### Model & inference
+- **INT8 quantization** of the ONNX model (~4× smaller, faster CPU inference).
+- **Hardware acceleration** — trial the NNAPI provider for NPU/GPU execution.
+- **SOTA model evaluation** — Matcha-TTS (flow-matching) and Kokoro are drop-in candidates via Sherpa's existing `OfflineTtsMatchaModelConfig` / `OfflineTtsKokoroModelConfig`.
+- **True pitch control** — a DSP/phase-vocoder stage (VITS exposes no native pitch parameter).
+- **SSML expansion** — prosody/emphasis/phoneme tags.
+
+### Training methodology (reference)
+- **Dataset:** the **ManaTTS** corpus (≈86 h, 44.1 kHz), cleaned with Spleeter.
+- **Forced alignment:** multi-model ASR voting; strict CER thresholds (HIGH < 0.05, MIDDLE < 0.20) for data selection.
+
+## Aspirational KPIs
+
+| Metric | Target | Note |
+| :--- | :--- | :--- |
+| **Real-Time Factor** | > 3.0× | mid-range CPU/NPU |
+| **Latency to first audio** | < 180 ms | enabled by streaming synthesis |
+| **RAM usage** | 10–20 MB active | depends on quantization |
+| **Storage** | < 80 MB | model weights |
+| **Mean Opinion Score** | > 4.0 | subjective naturalness |
+
+---
+AvaCore aims to set a new standard for Persian accessibility on Android: a robust, offline, high-quality voice for navigators, screen readers and virtual assistants.

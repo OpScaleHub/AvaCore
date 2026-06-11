@@ -1,9 +1,18 @@
 # AvaCore: Native Persian Text-to-Speech (TTS) Engine for Android
 
-AvaCore is a high-performance, on-device Persian (Farsi) Text-to-Speech engine designed to provide a natural and seamless voice experience for Android users. By integrating directly with the `android.speech.tts` framework, AvaCore enables all Android applications to speak Farsi with human-like prosody and high clarity, **entirely offline** — no network access is required at build or run time.
+AvaCore is a high-performance, on-device Persian (Farsi) Text-to-Speech engine designed to provide a natural and seamless voice experience for Android users. By integrating directly with the `android.speech.tts` framework, AvaCore enables all Android applications to speak Farsi with human-like prosody and high clarity. On the device it runs **entirely offline** — no network access is needed at run time.
 
 ## Project Vision
 To bridge the accessibility gap for Persian speakers on Android by delivering a state-of-the-art TTS engine that overcomes the unique linguistic challenges of the Farsi language, such as short-vowel omission and hidden *Ezafe* (کسرهٔ اضافه) constructions.
+
+## Setup (first build)
+The large binary assets (the `.aar` engine, the ~63 MB neural model, and the eSpeak-NG data) are **not committed to git** — they are provisioned on demand to keep the repo slim. Before the first build, run:
+
+```bash
+./download_assets.sh
+```
+
+This fetches the Sherpa-ONNX AAR, the Piper VITS model, and the eSpeak-NG data into place (one network fetch). After that, the build and the installed app are fully offline.
 
 ---
 

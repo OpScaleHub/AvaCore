@@ -13,3 +13,9 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Large binary assets — provisioned by ./download_assets.sh (run before building).
+# Kept out of git to keep the repo and its history slim. Runtime stays 100% offline.
+/app/libs/sherpa-onnx.aar
+/app/src/main/assets/tts/persian_model.onnx
+/app/src/main/assets/tts/espeak-ng-data/

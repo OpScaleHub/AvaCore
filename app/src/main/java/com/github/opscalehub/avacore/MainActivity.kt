@@ -61,7 +61,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun speakSample() {
-        val text = "این یک آزمایش از موتور بازگو کننده آوا است."
+        // Sample exercises number expansion (۱۴۰۴, ۳۵, ۲۰٪), punctuation pauses
+        // and multi-sentence streaming so the demo showcases the full pipeline.
+        val text = "سلام! این موتور بازگوکننده آوا است. " +
+            "امروز ۱۲ خرداد ۱۴۰۴ است، دمای هوا ۳۵ درجه و رطوبت ۲۰٪ می‌باشد."
         val result = tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, "sample_id")
         if (result == TextToSpeech.ERROR) {
             Toast.makeText(this, "Speech failed. Ensure AvaCore is selected.", Toast.LENGTH_SHORT).show()

@@ -40,6 +40,14 @@ android {
     @Suppress("UnstableApiUsage")
     kotlinOptions {
         jvmTarget = "17"
+        // Kotlin 2.0 compiles lambdas to invokedynamic by default, producing a
+        // synthetic lambda that only exposes the erased invoke(Object). Sherpa-ONNX's
+        // native generateWithCallback looks up the specialized invoke([F)Integer via
+        // JNI, so we force class-based lambdas/SAM conversions to keep that method.
+        freeCompilerArgs = freeCompilerArgs + listOf(
+            "-Xlambdas=class",
+            "-Xsam-conversions=class"
+        )
     }
     buildFeatures {
         viewBinding = true

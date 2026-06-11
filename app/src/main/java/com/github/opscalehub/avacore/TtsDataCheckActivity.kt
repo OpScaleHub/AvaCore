@@ -23,13 +23,13 @@ class TtsDataCheckActivity : Activity() {
         when (action) {
             TextToSpeech.Engine.ACTION_CHECK_TTS_DATA -> {
                 // Return supported locales in different formats to ensure compatibility
-                val availableVoices = arrayListOf("fa", "fa-IR", "fas-IRN")
+                // A single, correctly-formed ISO-3 locale (lang-country): Persian/Iran.
+                // Listing 2-letter duplicates here makes the system TTS settings show
+                // several phantom "languages" for one voice, so we expose exactly one.
+                val availableVoices = arrayListOf("fas-IRN")
                 resultIntent.putStringArrayListExtra(TextToSpeech.Engine.EXTRA_AVAILABLE_VOICES, availableVoices)
                 resultIntent.putStringArrayListExtra(TextToSpeech.Engine.EXTRA_UNAVAILABLE_VOICES, arrayListOf())
-                
-                // Some systems also look for these
-                resultIntent.putStringArrayListExtra("availableVoices", availableVoices)
-                
+
                 setResult(TextToSpeech.Engine.CHECK_VOICE_DATA_PASS, resultIntent)
             }
             "android.speech.tts.engine.GET_SAMPLE_TEXT" -> {

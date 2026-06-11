@@ -1,30 +1,91 @@
 package com.github.opscalehub.avacore.nlp
 
-import java.util.regex.Pattern
-
 /**
- * Handles text normalization for Persian language.
- * Tasks: Number expansion, abbreviation expansion, character normalization.
+ * Character-level normalization for Persian text.
+ *
+ * The goal is to hand eSpeak-NG a clean, canonical Persian string:
+ *  - fold Arabic-shaped letters to their Persian counterparts
+ *  - normalize the ZWNJ (نیم‌فاصله) and stray control characters
+ *  - strip kashida (ـ) and decorative combining marks that confuse G2P
+ *  - canonicalize punctuation spacing and collapse whitespace
+ *
+ * Digit handling is intentionally NOT done here — numbers are expanded to words
+ * by [NumberToWords] first, and any leftover digits are folded afterwards. Keeping
+ * digits intact at this stage lets the number expander detect them reliably.
+ *
+ * Pure Kotlin, no dependencies, so it is unit-testable on the JVM.
  */
 class Normalizer {
 
     fun normalize(text: String): String {
-        var normalized = text
-        normalized = normalizeCharacters(normalized)
-        normalized = expandNumbers(normalized)
-        return normalized
+        var s = text
+        s = foldCharacters(s)
+        s = normalizeZwnj(s)
+        s = stripDecorations(s)
+        s = normalizePunctuation(s)
+        s = collapseWhitespace(s)
+        return s.trim()
     }
 
-    private fun normalizeCharacters(text: String): String {
-        // Replace Arabic Keheh and Yeh with Persian counterparts
-        return text.replace("\u0643", "\u06a9") // Arabic Kaf -> Persian Keheh
-            .replace("\u064a", "\u06cc") // Arabic Ya -> Persian Yeh
-            .replace("\u0649", "\u06cc") // Arabic Alef Maksura -> Persian Yeh
+    /** Map Arabic-shaped letters and presentation forms to canonical Persian. */
+    private fun foldCharacters(text: String): String {
+        val sb = StringBuilder(text.length)
+        for (c in text) {
+            sb.append(
+                when (c) {
+                    'ك' -> 'ک' // Arabic Kaf -> Persian Keheh
+                    'ي' -> 'ی' // Arabic Yeh -> Persian Yeh
+                    'ى' -> 'ی' // Alef Maksura -> Persian Yeh
+                    'ة' -> 'ه' // Teh Marbuta -> Heh
+                    // Note: ۀ (heh with hamza) is left untouched — it carries the
+                    // ezafe vowel and eSpeak-NG reads it; folding to ه would lose it.
+                    else -> c
+                }
+            )
+        }
+        return sb.toString()
     }
 
-    private fun expandNumbers(text: String): String {
-        // This is a placeholder for a complex number-to-words converter
-        // In a real implementation, you'd use a rule-based system or a dictionary
+    /**
+     * Normalize the zero-width non-joiner. Different inputs use ZWSP/ZWJ or plain
+     * spaces around نیم‌فاصله; collapse those variants to a single ZWNJ (U+200C)
+     * and drop other zero-width controls eSpeak does not understand.
+     */
+    private fun normalizeZwnj(text: String): String {
         return text
+            .replace('‏', ' ')   // RIGHT-TO-LEFT MARK -> space
+            .replace('‎', ' ')   // LEFT-TO-RIGHT MARK -> space
+            .replace("‍", "")    // ZERO WIDTH JOINER -> drop
+            .replace("﻿", "")    // BOM / ZWNBSP -> drop
+            .replace(" ", " ")   // NO-BREAK SPACE -> space
+            // collapse spaces that surround an existing ZWNJ
+            .replace(Regex("\\s*‌\\s*"), "‌")
+    }
+
+    /** Remove kashida and standalone combining diacritics that hurt G2P. */
+    private fun stripDecorations(text: String): String {
+        return text
+            .replace("ـ", "")            // ـ Tatweel/Kashida
+            .replace("ٰ", "")            // superscript alef
+            // Tanvin marks are not pronounced reliably by eSpeak; drop them.
+            .replace(Regex("[ًٌٍ]"), "")
+    }
+
+    /** Canonicalize punctuation: fold Arabic forms and tidy spacing. */
+    private fun normalizePunctuation(text: String): String {
+        return text
+            .replace(',', '،')        // ASCII comma -> Persian comma (better pause)
+            .replace(';', '؛')        // ASCII semicolon -> Persian semicolon
+            .replace('?', '؟')        // ASCII question -> Persian question
+            // no space before, one space after Persian punctuation
+            .replace(Regex("\\s*([،؛؟!:])"), "$1")
+            .replace(Regex("([،؛؟!:])(?=\\S)"), "$1 ")
+    }
+
+    private fun collapseWhitespace(text: String): String {
+        return text
+            .replace(Regex("[\\t\\x0B\\f\\r]"), " ")
+            .replace(Regex(" {2,}"), " ")
+            .replace(Regex("\\n{3,}"), "\n\n")
     }
 }

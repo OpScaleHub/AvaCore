@@ -11,8 +11,13 @@ android {
         applicationId = "com.github.opscalehub.avacore"
         minSdk = 24
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+
+        // versionName is managed by release-please (do not edit by hand — bump via
+        // conventional commits). versionCode is derived from it so it stays monotonic.
+        val releaseVersion = "1.0.0" // x-release-please-version
+        versionName = releaseVersion
+        versionCode = releaseVersion.split(".").map { it.toIntOrNull() ?: 0 }
+            .let { (it.getOrElse(0) { 0 }) * 1_000_000 + (it.getOrElse(1) { 0 }) * 1_000 + (it.getOrElse(2) { 0 }) }
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -23,8 +28,27 @@ android {
         }
     }
 
+    // Release signing. Locally (no keystore) `assembleRelease` still produces an
+    // unsigned APK; in CI the keystore + passwords arrive via env vars / secrets.
+    val keystoreFile = (System.getenv("KEYSTORE_PATH")
+        ?: project.findProperty("KEYSTORE_PATH") as String?)?.let { file(it) }
+    signingConfigs {
+        if (keystoreFile != null && keystoreFile.exists()) {
+            create("release") {
+                storeFile = keystoreFile
+                storePassword = System.getenv("KEYSTORE_PASSWORD")
+                    ?: project.findProperty("KEYSTORE_PASSWORD") as String?
+                keyAlias = System.getenv("KEY_ALIAS")
+                    ?: project.findProperty("KEY_ALIAS") as String?
+                keyPassword = System.getenv("KEY_PASSWORD")
+                    ?: project.findProperty("KEY_PASSWORD") as String?
+            }
+        }
+    }
+
     buildTypes {
         release {
+            signingConfigs.findByName("release")?.let { signingConfig = it }
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(

@@ -18,7 +18,7 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: set up JDK 17
+    - name: Set up JDK 17
       uses: actions/setup-java@v4
       with:
         java-version: '17'
@@ -28,6 +28,7 @@ jobs:
       uses: gradle/actions/setup-gradle@v3
       with:
         gradle-version: wrapper
+        cache-read-only: ${{ github.ref != 'refs/heads/main' }}
 
     - name: Provision Assets (Offline Models)
       run: |
@@ -43,24 +44,15 @@ jobs:
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
-        name: app-debug
+        name: debug-apk
         path: app/build/outputs/apk/debug/app-debug.apk
+        retention-days: 7
 
     # The landing page links to releases/latest/download/avacore-latest.apk,
     # so Pages only needs the HTML — the APK comes from the release.
-    - name: Prepare Landing Page
-      if: github.ref == 'refs/heads/main'
-      run: |
-        mkdir -p public
-        if [ -f docs/index.html ]; then
-          cp docs/index.html public/index.html
-        else
-          echo "<html><body style='font-family:sans-serif;text-align:center;padding:50px;'><h1>AvaCore TTS</h1><a href='https://github.com/OpScaleHub/AvaCore/releases/latest/download/avacore-latest.apk'>Download latest APK</a></body></html>" > public/index.html
-        fi
-
-    - name: Deploy to GitHub Pages
+    - name: Deploy GitHub Pages
       if: github.ref == 'refs/heads/main'
       uses: peaceiris/actions-gh-pages@v4
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./public
+        publish_dir: ./docs
